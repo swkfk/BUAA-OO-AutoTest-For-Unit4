@@ -1,3 +1,4 @@
+from .User import User
 from ..Manager.Reserve import ReserveInfo
 
 import enum
@@ -13,8 +14,15 @@ class Book:
         self.id = id
         self.reserve: ReserveInfo | None = None
 
-    def reserveFor(self, reserve: ReserveInfo):
+    def reserve_for(self, reserve: ReserveInfo | None):
         self.reserve = reserve
+
+    def is_reserved_for(self, user: User | str):
+        if self.reserve is None:
+            return False
+        if isinstance(user, User):
+            return user.user_id == self.reserve.user_id
+        return user == self.reserve.user_id
 
     def __eq__(self, value: object) -> bool:
         if value is None or not isinstance(value, Book):
