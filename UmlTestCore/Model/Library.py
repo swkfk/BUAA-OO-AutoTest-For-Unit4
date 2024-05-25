@@ -1,17 +1,17 @@
 from typing import Dict, List, Literal
 from datetime import date, timedelta
 
-from .Model.Book import Book
-from .Model.Order import Order
-from .Model import Position
-from .Manager.BookStorage import BookStorage
-from .Manager.Command import CommandInfo
-from .Manager.Request import MoveRequest, NormalRequest
-from .Manager.Reserve import ReserveInfo
-from .Exceptions.BadBehaviorException import \
+from .Book import Book
+from .Order import Order
+from . import Position
+from ..Manager.BookStorage import BookStorage
+from ..Manager.Command import CommandInfo
+from ..Manager.Request import MoveRequest, NormalRequest
+from ..Manager.Reserve import ReserveInfo
+from ..Exceptions.BadBehaviorException import \
     BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid, BorrowInvalidBook, BookPickInvlid
-from .Exceptions.UnexpectedException import Unexpected
-from .Model.User import User
+from ..Exceptions.UnexpectedException import Unexpected
+from .User import User
 
 
 class Library:
