@@ -13,13 +13,7 @@ class User:
         self.appoints: List[Order] = []
 
     def on_accept_borrow(self, book: Book, command: CommandInfo):
-        if book.type == Book.Type.A:
-            raise BorrowInvalidBook(command, "borrow A type book")
-        if book.type == Book.Type.B and any((b.type == Book.Type.B for b in self.owned_book)):
-            raise BorrowInvalidBook(command, "borrow two B type books at a time")
-        if any((b == book for b in self.owned_book)):
-            raise BorrowInvalidBook(command, "borrow same books at a time")
-
+        self.check_borrow(book, command)
         self.owned_book.append(book)
 
     def on_return_book(self, book: Book, command: CommandInfo):
@@ -35,3 +29,11 @@ class User:
 
     def has_ordered(self, book: Book):
         return Order(self.user_id, book) in self.appoints
+
+    def check_borrow(self, book: Book, command: CommandInfo, addi: str = ""):
+        if book.type == Book.Type.A:
+            raise BorrowInvalidBook(command, "borrow A type book" + addi)
+        if book.type == Book.Type.B and any((b.type == Book.Type.B for b in self.owned_book)):
+            raise BorrowInvalidBook(command, "borrow two B type books at a time" + addi)
+        if any((b == book for b in self.owned_book)):
+            raise BorrowInvalidBook(command, "borrow same books at a time" + addi)

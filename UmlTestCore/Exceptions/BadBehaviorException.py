@@ -37,3 +37,9 @@ class BookMovementInvlid(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
         super().__init__(command, reason)
         self.prompt = "Book moved unexpectedly"
+
+
+class BookPickInvlid(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Book picked unexpectedly"
