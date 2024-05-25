@@ -14,8 +14,26 @@ class BadBehavior(Exception):
     def __repr__(self) -> str:
         return "BadBehavior: " + str(self)
 
+
 class BorrowInvalidBook(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
         super().__init__(command, reason)
         self.prompt = "Cannot borrow this book"
 
+
+class OverdueBookRemained(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Overdue book not cleared"
+
+
+class BookRemainedOnBro(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Book in the bro not cleared"
+
+
+class BookMovementInvlid(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Book moved unexpectedly"

@@ -1,10 +1,12 @@
 from .User import User
 from ..Manager.Reserve import ReserveInfo
 
-import enum
+from datetime import date
+from enum import Enum
+from typing import Literal
 
 class Book:
-    class Type(enum.Enum):
+    class Type(Enum):
         A = 1
         B = 2
         C = 3
@@ -23,6 +25,10 @@ class Book:
         if isinstance(user, User):
             return user.user_id == self.reserve.user_id
         return user == self.reserve.user_id
+
+    def reserve_overdue(self, now_date: date, time: Literal["open", "close"]):
+        return self.reserve is not None and \
+              (self.reserve.overdue_open(now_date) if time == "open" else self.reserve.overdue_close(now_date))
 
     def __eq__(self, value: object) -> bool:
         if value is None or not isinstance(value, Book):
