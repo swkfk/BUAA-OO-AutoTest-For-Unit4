@@ -43,3 +43,13 @@ class BookPickInvlid(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
         super().__init__(command, reason)
         self.prompt = "Book picked unexpectedly"
+
+class BadQuery(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Query wrong"
+
+class BadReject(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "You shall not reject this"
