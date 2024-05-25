@@ -1,7 +1,5 @@
 /*
 !.gitignore
-!Uml1.py
-!Uml2.py
-!Uml3.py
+!UmlMain.py
 !/UmlTestCore/
 **/__pycache__/
