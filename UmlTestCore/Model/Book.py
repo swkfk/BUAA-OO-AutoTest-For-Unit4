@@ -40,3 +40,13 @@ class Book:
 
     def __hash__(self) -> int:
         return hash(str(self))
+
+    @classmethod
+    def from_str(cls, s: str):
+        t, i = s.split()
+        if t == 'A':
+            return cls(cls.Type.A, i)
+        elif t == 'B':
+            return cls(cls.Type.B, i)
+        elif t == 'C':
+            return cls(cls.Type.C, i)

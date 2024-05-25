@@ -9,20 +9,21 @@ from ..Manager.Command import CommandInfo
 from ..Manager.Request import MoveRequest, NormalRequest
 from ..Manager.Reserve import ReserveInfo
 from ..Exceptions.BadBehaviorException import \
-    BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid, BorrowInvalidBook, BookPickInvlid
+    BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid, BorrowInvalidBook, BookPickInvlid, BadReject
 from ..Exceptions.UnexpectedException import Unexpected
 from .User import User
 
 
 class Library:
-    def __init__(self) -> None:
+    def __init__(self, inventory: Dict[Book, int], users: List[User]) -> None:
         self.book_shelf = BookStorage()
         self.borrow_return_office = BookStorage()
         self.appoint_office: List[Book] = []
         self.users: Dict[str, User] = {}
 
-    def init_inventory(self, inventory: Dict[Book, int]):
         self.book_shelf.books |= inventory
+        for user in users:
+            self.users[user.user_id] = user
 
     def on_reject_borrow(self, request: NormalRequest):
         if request.book not in self.book_shelf:
@@ -49,6 +50,15 @@ class Library:
             raise Unexpected("L.oao", f"user not exists ({request.user_id})")
         self.users[request.user_id].check_borrow(request.book, request.command, " (Appointment)")
         self.users[request.user_id].appoints.append(Order(request.user_id, request.book))
+
+    def on_reject_order(self, request: NormalRequest):
+        if request.user_id not in self.users:
+            raise Unexpected("L.oro", f"user not exists ({request.user_id})")
+        try:
+            self.users[request.user_id].check_borrow(request.book, request.command, " (Appointment)")
+        except BorrowInvalidBook:
+            return
+        raise BadReject(request.command, "this appointment can be accepted")
 
     def on_accept_pick(self, request: NormalRequest, now_date: date):
         if request.user_id not in self.users:
