@@ -18,6 +18,10 @@ class BookStorage:
     def __iter__(self):
         return iter(self.books)
 
+    def core_dump(self, prompt: str) -> str:
+        sb = prompt + ": \n"
+        return sb + "\n".join([f"  {b}: {c}" for b, c in self.books.items()])
+
     def put(self, book: Book):
         if book in self:
             self.books[book] += 1

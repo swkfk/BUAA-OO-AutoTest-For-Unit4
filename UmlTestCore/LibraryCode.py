@@ -33,9 +33,9 @@ class Library:
     def on_accept_borrow(self, request: NormalRequest):
         if request.book not in self.book_shelf:
             raise BorrowInvalidBook(request.command, "This book is not on the shelf")
-        self.book_shelf.get(request.book)
         if request.user_id not in self.users:
             raise Unexpected("L.ob", f"user not exists ({request.user_id})")
+        self.book_shelf.get(request.book)
         self.users[request.user_id].on_accept_borrow(request.book, request.command)
 
     def on_return(self, request: NormalRequest):
@@ -137,6 +137,17 @@ class Library:
                 else:
                     move.book.reserve_for(ReserveInfo(move.reserve_for, now_date + timedelta(days=1)))
                 self.appoint_office.append(move.book)
+
+    def core_dump(self) -> str:
+        sb = "Library: \n" + '-' * 20 + "\n\n"
+        sb += self.book_shelf.core_dump("Bookshelf") + "\n"
+        sb += self.borrow_return_office.core_dump("Borrow-Return-Office") + "\n"
+        sb += "Appoint-Office: \n"
+        sb += "".join([f"  {book}: {book.reserve}\n" for book in self.appoint_office])
+        sb += "\nUsers: \n" + '-' * 20 + "\n"
+        sb += "\n".join([f"{user.core_dump()}" for user in self.users.values()])
+        sb += "\n" + '=' * 20 + "\n"
+        return sb
 
     @staticmethod
     def try_get_book(storege: BookStorage, book: Book, command: CommandInfo, pos: str = "here"):

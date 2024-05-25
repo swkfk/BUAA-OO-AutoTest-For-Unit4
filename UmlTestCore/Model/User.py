@@ -12,6 +12,12 @@ class User:
         self.owned_book: List[Book] = []
         self.appoints: List[Order] = []
 
+    def core_dump(self) -> str:
+        sb = f"{self.user_id} Owned {len(self.owned_book)} books and {len(self.appoints)} appoints\n"
+        sb += "".join(f"  Book: {book}\n" for book in self.owned_book)
+        sb += "".join(f"  Appo: {order.book}\n" for order in self.appoints)
+        return sb
+
     def on_accept_borrow(self, book: Book, command: CommandInfo):
         self.check_borrow(book, command)
         self.owned_book.append(book)
