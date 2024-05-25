@@ -1,3 +1,16 @@
+from enum import Enum
+
+
+class CommandType(Enum):
+    OPEN = 'OPEN'
+    CLOSE = 'CLOSE'
+    QUERY = 'queried'
+    BORROW = 'borrowed'
+    ORDER = 'ordered'
+    RETURN = 'returned'
+    PICK = 'picked'
+
+
 class CommandInfo:
     def __init__(self, command: str, output: str) -> None:
         self.input: str = command
