@@ -48,6 +48,6 @@ def gen_default_config():
 def fisrt_time():
     print("Generate Config File...")
     gen_default_config()
-    print("You can pass the 'config' argument to amend the config")
+    print(f"<< You can run as 'python {sys.argv[0]} config' to amend the config! >>")
     print()
     interactor()

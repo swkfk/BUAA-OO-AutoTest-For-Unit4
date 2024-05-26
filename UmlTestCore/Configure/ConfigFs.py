@@ -13,7 +13,7 @@ def write_config(config: Dict[str, str]):
 
 def read_config() -> Dict[str, str] | None:
     path = Path(CONFIG_FILE)
-    if not path.exists:
+    if not path.exists():
         return None
     try:
         base64ed = path.read_bytes()
