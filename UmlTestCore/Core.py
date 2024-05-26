@@ -79,6 +79,7 @@ class Core:
         if self.rest_command_count <= 0:
             self.open = False
             return self.gen_close()
+        self.rest_command_count -= 1
         return self.gen_next_command()
 
     def before_open(self):
