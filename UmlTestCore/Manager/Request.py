@@ -10,7 +10,7 @@ class MoveRequest:
         self.command: CommandInfo = command
         self.movement: Tuple[Position, Position] = monvment
         self.book: Book = book
-        self.reserve_for: str = ""
+        self.reserve_for: str = reserve_for
 
 
 class NormalRequest:
