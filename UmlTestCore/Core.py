@@ -7,8 +7,10 @@ from .Manager.Command import CommandInfo, CommandType
 from .Model.Library import Library
 from .Model.Book import Book
 from .Model.User import User
+from .Model.Order import Order
 from .Model import Position
 from .Generator.InitItems import generate_init_book, generate_init_user, generate_time_sequence
+from .Generator.RandUtils import *
 from .Exceptions.BadBehaviorException import BadQuery
 
 class Core:
@@ -24,6 +26,7 @@ class Core:
 
         self.stored_movement: List[MoveRequest] = []
         self.rest_movement_count: int = 0
+        self.rest_command_count: int = 0
 
         self.command: str = ""
         self.command_type = ""
@@ -36,7 +39,7 @@ class Core:
         res.append(str(len(self.books)))
         for b, c in self.books.items():
             res.append(f"{b} {c}")
-        res.append(self.gen_command(self.dates[self.date_index], CommandType.OPEN))
+        res.append(self.gen_command(CommandType.OPEN))
         self.command = res[-1]
         self.open = True
         return res
@@ -48,21 +51,80 @@ class Core:
             return Reaction(Action.Continue)
         elif self.rest_movement_count == 1:
             self.stored_movement.append(self.parse_move(output, self.command))
-            self.library.on_handle_move(self.dates[self.date_index], self.stored_movement, "open" if self.open else "close")
+            # self.library.on_handle_move(self.dates[self.date_index], self.stored_movement, "open" if self.open else "close")
             self.rest_movement_count = 0
             if not open:
-                self.date_index += 1
-            if self.date_index >= len(self.dates):
-                return Reaction(Action.Terminate)
+                self.library.on_close(self.dates[self.date_index], self.stored_movement)
+                return self.gen_open()
+            else:
+                self.library.on_open(self.dates[self.date_index], self.stored_movement, CommandInfo(self.command, "<OPEN CHECK>"))
             # Not Returned #
         elif output.isnumeric():
             self.rest_movement_count = int(output)
-            return Reaction(Action.Continue)
+            if self.rest_movement_count > 0:
+                return Reaction(Action.Continue)
+            if not open:
+                self.library.on_close(self.dates[self.date_index], [])
+                return self.gen_open()
+            else:
+                self.library.on_open(self.dates[self.date_index], [], CommandInfo(self.command, "<OPEN CHECK>"))
+            # Not Returned #
         else:
             assert self.dates[self.date_index] == self.parse_date(output)
             self.parse_output(output, self.command)
             # Not Returned #
-        # TODO: Gen Next Command
+        # Gen Next Command
+        if self.rest_command_count <= 0:
+            return self.gen_close()
+        return self.gen_next_command()
+
+    def before_open(self):
+        self.rest_command_count = gen_int(15, 40)
+        self.stored_movement = []
+
+    def gen_next_command(self) -> Reaction:
+        lent_book_cout = sum(map(lambda x: len(x.owned_book), (u for u in self.users)))
+        order_book_cout = sum(map(lambda x: len(x.appoints), (u for u in self.users)))
+        if lent_book_cout > len(self.users) * 1.5 or (lent_book_cout > 0 and probability(0.3)):
+            # Return
+            while True:
+                user = pick_list((u for u in self.users if len(u.owned_book) > 0))
+                if len(user.owned_book) > 0:
+                    break
+            book = pick_list(user.owned_book)
+            return Reaction(Action.SendText, self.gen_command(CommandType.RETURN, book_id=str(book), user_id=user.user_id))
+        elif order_book_cout > len(self.users) or (order_book_cout > 0 and probability(0.3)):
+            # Pick
+            while True:
+                user = pick_list((u for u in self.users if len(u.appoints) > 0))
+                if len(user.owned_book) > 0:
+                    break
+            order: Order = pick_list(user.appoints)
+            return Reaction(Action.SendText, self.gen_command(CommandType.PICK, book_id=str(order.book), user_id=user.user_id))
+        elif probability(0.7):
+            # Order
+            user = pick_list(self.users)
+            book = pick_list(self.books.keys())
+            return Reaction(Action.SendText, self.gen_command(CommandType.ORDER, book_id=book, user_id=user.user_id))
+        else:
+            # Borrow
+            user = pick_list(self.users)
+            book = pick_list(self.books.keys())
+            return Reaction(Action.SendText, self.gen_command(CommandType.BORROW, book_id=book, user_id=user.user_id))
+
+    def gen_open(self) -> Reaction:
+        self.date_index += 1
+        if self.date_index >= len(self.dates):
+            return Reaction(Action.Terminate)
+        self.before_open()
+        return Reaction(Action.SendText, self.gen_command(CommandType.OPEN))
+
+    def before_close(self):
+        self.stored_movement = []
+    
+    def gen_close(self) -> Reaction:
+        self.before_close()
+        return Reaction(Action.SendText, self.gen_command(CommandType.CLOSE))
 
     def parse_output(self, s: str, command: str):
         command_info = CommandInfo(command, s)
@@ -104,13 +166,16 @@ class Core:
             else:
                 assert False
 
-    @staticmethod
-    def gen_command(t: date, cmd_type: CommandType, **kwargs):
+    def gen_command(self, cmd_type: CommandType, **kwargs):
+        t = self.dates[self.date_index]
         if cmd_type == CommandType.OPEN or cmd_type == CommandType.CLOSE:
             return f"[{t}] {cmd_type.value}"
         book_id = kwargs['book_id']
         user_id = kwargs['user_id']
-        return f"[{t}] {user_id} {cmd_type.value} {book_id}"
+        command = f"[{t}] {user_id} {cmd_type.value} {book_id}"
+        self.command = command
+        self.command_type = cmd_type
+        return command
 
     @staticmethod
     def parse_date(s: str) -> date:
