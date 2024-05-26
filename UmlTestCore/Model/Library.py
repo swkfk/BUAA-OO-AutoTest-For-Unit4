@@ -26,8 +26,9 @@ class Library:
             self.users[user.user_id] = user
 
     def on_reject_borrow(self, request: NormalRequest):
-        self.book_shelf.get(request.book)
-        self.borrow_return_office.put(request.book)
+        if request.book.type != Book.Type.A and request.book in self.book_shelf and self.book_shelf[request.book] > 0:
+            self.book_shelf.get(request.book)
+            self.borrow_return_office.put(request.book)
 
     def on_accept_borrow(self, request: NormalRequest):
         if request.book not in self.book_shelf:
