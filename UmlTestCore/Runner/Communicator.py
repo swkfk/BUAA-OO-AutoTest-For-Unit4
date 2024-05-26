@@ -2,6 +2,8 @@ import subprocess
 from typing import List
 from enum import Enum
 
+from ..Exceptions.BadBehaviorException import BadBehavior
+from ..Exceptions.UnexpectedException import Unexpected
 
 class Action(Enum):
     SendText = 1
@@ -40,7 +42,16 @@ def runner_core(args: List[str], callback, init_input: List[str], store_pattern:
 
     while True:
         output = stdout.readline().removesuffix('\n')
-        reaction: Reaction = callback(output)
+        try:
+            reaction: Reaction = callback(output)
+        except AssertionError as e:
+            return f"Output Syntax Error: {e}"
+        except BadBehavior as e:
+            return f"Wrong Behavior: {e}"
+        except Unexpected as e:
+            return f"Unexpected Situation: {e}"
+        except Exception as e:
+            return f"Rare Behavior: {e}"
         if reaction.action == Action.Continue:
             continue
         if reaction.action == Action.Terminate:
@@ -53,3 +64,5 @@ def runner_core(args: List[str], callback, init_input: List[str], store_pattern:
     fout.close()
     stdin.close()
     process.kill()
+
+    return "Ok"
