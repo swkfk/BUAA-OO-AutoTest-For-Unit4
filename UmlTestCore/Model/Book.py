@@ -1,4 +1,3 @@
-from .User import User
 from ..Manager.Reserve import ReserveInfo
 
 from datetime import date
@@ -19,12 +18,12 @@ class Book:
     def reserve_for(self, reserve: ReserveInfo | None):
         self.reserve = reserve
 
-    def is_reserved_for(self, user: User | str):
+    def is_reserved_for(self, user):
         if self.reserve is None:
             return False
-        if isinstance(user, User):
-            return user.user_id == self.reserve.user_id
-        return user == self.reserve.user_id
+        if isinstance(user, str):
+            return user == self.reserve.user_id
+        return user.user_id == self.reserve.user_id
 
     def reserve_overdue(self, now_date: date, time: Literal["open", "close"]):
         return self.reserve is not None and \
