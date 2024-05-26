@@ -117,23 +117,27 @@ class Library:
             elif move.movement[0] == Position.BRO:
                 self.try_get_book(self.borrow_return_office, move.book, move.command, "borrow-return-office")
             elif move.movement[0] == Position.AO:
-                print('--')
-                for book in self.appoint_office:
-                    print(book, now_date, time)
-                print('--')
-                for i, book in enumerate(b for b in self.appoint_office if b == move.book and b.reserve_overdue(now_date, time)):
-                    break
-                else:
+                i = -1
+                for i, book in enumerate(self.appoint_office):
+                    if book == move.book and book.reserve_overdue(now_date, time):
+                        break
+                    else:
+                        i = -1
+                if i == -1:
                     raise BookMovementInvlid(move.command, "no books overdue in the appoint-office")
-                self.appoint_office.pop(i)
+                else:
+                    book = self.appoint_office.pop(i)
+                    # print("Poped:", book)
+
                 if book.reserve is None:
                     raise Unexpected("L.ohm.1", "Book reserve info is None")
                 if book.reserve.user_id not in self.users:
                     raise Unexpected("L.ohm.2", "Book reserve for a not-exist user")
                 user = self.users[book.reserve.user_id]
                 if Order(book.reserve.user_id, book) not in user.appoints:
-                    print("Order: {book.reserve.user_id} {book}")
+                    # print(f"Order: {book.reserve.user_id} {book}")
                     raise Unexpected("L.ohm.3", "User has no this order")
+                # print(f"Removed: {book.reserve.user_id}, {book}")
                 user.appoints.remove(Order(book.reserve.user_id, book))
 
             if move.movement[1] == Position.BS:
