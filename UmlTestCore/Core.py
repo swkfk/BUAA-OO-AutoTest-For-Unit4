@@ -53,8 +53,9 @@ class Core:
             self.stored_movement.append(self.parse_move(output, self.command))
             # self.library.on_handle_move(self.dates[self.date_index], self.stored_movement, "open" if self.open else "close")
             self.rest_movement_count = 0
-            if not open:
+            if not self.open:
                 self.library.on_close(self.dates[self.date_index], self.stored_movement)
+                self.open = True
                 return self.gen_open()
             else:
                 self.library.on_open(self.dates[self.date_index], self.stored_movement, CommandInfo(self.command, "<OPEN CHECK>"))
@@ -63,8 +64,9 @@ class Core:
             self.rest_movement_count = int(output)
             if self.rest_movement_count > 0:
                 return Reaction(Action.Continue)
-            if not open:
+            if not self.open:
                 self.library.on_close(self.dates[self.date_index], [])
+                self.open = True
                 return self.gen_open()
             else:
                 self.library.on_open(self.dates[self.date_index], [], CommandInfo(self.command, "<OPEN CHECK>"))
@@ -75,6 +77,7 @@ class Core:
             # Not Returned #
         # Gen Next Command
         if self.rest_command_count <= 0:
+            self.open = False
             return self.gen_close()
         return self.gen_next_command()
 
