@@ -42,6 +42,8 @@ def runner_core(args: List[str], callback, init_input: List[str], store_pattern:
 
     while True:
         output = stdout.readline().removesuffix('\n')
+        fout.write(output + '\n')
+        fout.flush()
         try:
             reaction: Reaction = callback(output)
         except AssertionError as e:
@@ -57,6 +59,8 @@ def runner_core(args: List[str], callback, init_input: List[str], store_pattern:
         if reaction.action == Action.Terminate:
             break
         if reaction.action == Action.SendText:
+            fin.write(reaction.msg + '\n')
+            fin.flush()
             stdin.write(reaction.msg + '\n')
             stdin.flush()
 
