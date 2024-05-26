@@ -35,7 +35,7 @@ class Book:
         return value.id == self.id and value.type == self.type
 
     def __str__(self) -> str:
-        return f'{self.type.name}-{id}'
+        return f'{self.type.name}-{self.id}'
 
     def __hash__(self) -> int:
         return hash(str(self))
