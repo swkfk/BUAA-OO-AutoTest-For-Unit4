@@ -84,7 +84,7 @@ class Library:
         if not Order(request.user_id, request.book) in user.appoints:
             raise Unexpected("L.hpo", "user has no such order")
         for book in self.appoint_office:
-            if book.is_reserved_for(user) and not book.reserve_overdue(now_date, "open"):
+            if book == request.book and book.is_reserved_for(user) and not book.reserve_overdue(now_date, "open"):
                 return True
         return False
 
