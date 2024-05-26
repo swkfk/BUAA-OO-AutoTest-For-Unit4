@@ -67,7 +67,7 @@ class Library:
 
         for i in range(len(self.appoint_office)):
             book = self.appoint_office[i]
-            if book.is_reserved_for(request.user_id) and not book.reserve_overdue(now_date, "open"):
+            if book == request.book and book.is_reserved_for(request.user_id) and not book.reserve_overdue(now_date, "open"):
                 break
         self.appoint_office.pop(i)
 
@@ -77,6 +77,11 @@ class Library:
         if request.user_id not in self.users:
             raise Unexpected("L.orp", f"user not exists ({request.user_id})")
         if self.has_pickable_order(request, now_date):
+            user = self.users[request.user_id]
+            try:
+                user.check_borrow(request.book, CommandInfo('', ''))
+            except:
+                return
             raise BookPickInvlid(request.command, "the appoint shall be accepted")
 
     def has_pickable_order(self, request: NormalRequest, now_date: date):
@@ -112,6 +117,10 @@ class Library:
             elif move.movement[0] == Position.BRO:
                 self.try_get_book(self.borrow_return_office, move.book, move.command, "borrow-return-office")
             elif move.movement[0] == Position.AO:
+                print('--')
+                for book in self.appoint_office:
+                    print(book, now_date, time)
+                print('--')
                 for i, book in enumerate(b for b in self.appoint_office if b == move.book and b.reserve_overdue(now_date, time)):
                     break
                 else:
@@ -123,6 +132,7 @@ class Library:
                     raise Unexpected("L.ohm.2", "Book reserve for a not-exist user")
                 user = self.users[book.reserve.user_id]
                 if Order(book.reserve.user_id, book) not in user.appoints:
+                    print("Order: {book.reserve.user_id} {book}")
                     raise Unexpected("L.ohm.3", "User has no this order")
                 user.appoints.remove(Order(book.reserve.user_id, book))
 
