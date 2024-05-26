@@ -91,7 +91,7 @@ class Core:
         if lent_book_cout > len(self.users) * 1.5 or (lent_book_cout > 0 and probability(0.3)):
             # Return
             while True:
-                user = pick_list((u for u in self.users if len(u.owned_book) > 0))
+                user = pick_list([u for u in self.users if len(u.owned_book) > 0])
                 if len(user.owned_book) > 0:
                     break
             book = pick_list(user.owned_book)
@@ -99,8 +99,8 @@ class Core:
         elif order_book_cout > len(self.users) or (order_book_cout > 0 and probability(0.3)):
             # Pick
             while True:
-                user = pick_list((u for u in self.users if len(u.appoints) > 0))
-                if len(user.owned_book) > 0:
+                user = pick_list([u for u in self.users if len(u.appoints) > 0])
+                if len(user.appoints) > 0:
                     break
             order: Order = pick_list(user.appoints)
             return Reaction(Action.SendText, self.gen_command(CommandType.PICK, book_id=str(order.book), user_id=user.user_id))
