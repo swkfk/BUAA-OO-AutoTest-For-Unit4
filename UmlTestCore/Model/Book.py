@@ -42,7 +42,7 @@ class Book:
 
     @classmethod
     def from_str(cls, s: str):
-        t, i = s.split()
+        t, i = s.split('-')
         if t == 'A':
             return cls(cls.Type.A, i)
         elif t == 'B':
