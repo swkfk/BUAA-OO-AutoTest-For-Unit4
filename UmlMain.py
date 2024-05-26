@@ -4,8 +4,8 @@ from UmlTestCore.Core import Core
 
 import sys
 import shutil
+import time
 from pathlib import Path
-from time import time
 
 def main():
     Path("TestCases/").mkdir(exist_ok=True)
@@ -52,11 +52,13 @@ def main():
             shutil.copy('TestCases/output.txt', f'TestCases/{time_s}.out.txt')
             Path(f'TestCases/{time_s}.dump.txt').write_text(dump_core)
             Path(f'TestCases/{time_s}.check.txt').write_text(ret)
+            time.sleep(1)
         i += 1
 
     if wa == 0:
         print("All Accepted!")
-
+    else:
+        print(f"Wa {wa} cases")
 
 try:
     main()
