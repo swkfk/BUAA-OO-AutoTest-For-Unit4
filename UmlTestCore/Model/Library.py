@@ -26,8 +26,6 @@ class Library:
             self.users[user.user_id] = user
 
     def on_reject_borrow(self, request: NormalRequest):
-        if request.book not in self.book_shelf:
-            raise BorrowInvalidBook(request.command, "This book is not on the shelf")
         self.book_shelf.get(request.book)
         self.borrow_return_office.put(request.book)
 
