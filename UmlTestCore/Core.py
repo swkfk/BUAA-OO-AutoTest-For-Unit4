@@ -107,12 +107,12 @@ class Core:
         elif probability(0.7):
             # Order
             user = pick_list(self.users)
-            book = pick_list(self.books.keys())
+            book = pick_list(list(self.books.keys()))
             return Reaction(Action.SendText, self.gen_command(CommandType.ORDER, book_id=book, user_id=user.user_id))
         else:
             # Borrow
             user = pick_list(self.users)
-            book = pick_list(self.books.keys())
+            book = pick_list(list(self.books.keys()))
             return Reaction(Action.SendText, self.gen_command(CommandType.BORROW, book_id=book, user_id=user.user_id))
 
     def gen_open(self) -> Reaction:
@@ -146,7 +146,7 @@ class Core:
             accept = outputs[1] == '[accept]'
             user_id = outputs[2]
             assert any((user.user_id == user_id for user in self.users))
-            book = Book.from_str(outputs[1])
+            book = Book.from_str(outputs[4])
             assert book is not None
             if outputs[3] == CommandType.BORROW.value:
                 if accept:
