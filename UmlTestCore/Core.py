@@ -41,6 +41,7 @@ class Core:
             res.append(f"{b} {c}")
         res.append(self.gen_command(CommandType.OPEN))
         self.command = res[-1]
+        self.command_type = CommandType.OPEN
         self.open = True
         return res
 
@@ -173,10 +174,11 @@ class Core:
     def gen_command(self, cmd_type: CommandType, **kwargs):
         t = self.dates[self.date_index]
         if cmd_type == CommandType.OPEN or cmd_type == CommandType.CLOSE:
-            return f"[{t}] {cmd_type.value}"
-        book_id = kwargs['book_id']
-        user_id = kwargs['user_id']
-        command = f"[{t}] {user_id} {cmd_type.value} {book_id}"
+            command = f"[{t}] {cmd_type.value}"
+        else:
+            book_id = kwargs['book_id']
+            user_id = kwargs['user_id']
+            command = f"[{t}] {user_id} {cmd_type.value} {book_id}"
         self.command = command
         self.command_type = cmd_type
         return command
