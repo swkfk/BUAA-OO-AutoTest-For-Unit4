@@ -91,13 +91,24 @@ class Core:
         lent_book_cout = sum(map(lambda x: len(x.owned_book), (u for u in self.users)))
         order_book_cout = sum(map(lambda x: len(x.appoints), (u for u in self.users)))
         if lent_book_cout > len(self.users) * 1.5 or (lent_book_cout > 0 and probability(0.3)):
-            # Return
+            # Return Or Renew
             while True:
                 user = pick_list([u for u in self.users if len(u.owned_book) > 0])
                 if len(user.owned_book) > 0:
                     break
-            book = pick_list(user.owned_book)
-            return Reaction(Action.SendText, self.gen_command(CommandType.RETURN, book_id=str(book), user_id=user.user_id))
+            book: Book = pick_list(user.owned_book)
+            if book in user.renewed_book:
+                cmd_type = CommandType.RETURN
+            else:
+                return_date = book.return_date
+                now_date = self.dates[self.date_index]
+                if return_date is None:
+                    cmd_type = CommandType.RETURN
+                elif abs((return_date - now_date).days) <= 6:
+                    cmd_type = CommandType.RENEW
+                else:
+                    cmd_type = CommandType.RETURN
+            return Reaction(Action.SendText, self.gen_command(cmd_type, book_id=str(book), user_id=user.user_id))
         elif order_book_cout > len(self.users) or (order_book_cout > 0 and probability(0.3)):
             # Pick
             while True:
@@ -165,6 +176,11 @@ class Core:
                     self.library.on_accept_pick(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
                 else:
                     self.library.on_reject_pick(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
+            elif outputs[3] == CommandType.RENEW.value:
+                if accept:
+                    self.library.on_accept_renew(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
+                else:
+                    self.library.on_reject_renew(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
             else:
                 assert False
         else:

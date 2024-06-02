@@ -58,3 +58,8 @@ class BadReturnOverdue(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
         super().__init__(command, reason)
         self.prompt = "Return overdue judgement is wrong"
+
+class BadRenew(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Renew Error"

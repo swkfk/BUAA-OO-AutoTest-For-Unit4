@@ -9,7 +9,7 @@ from ..Manager.Command import CommandInfo
 from ..Manager.Request import MoveRequest, NormalRequest
 from ..Manager.Reserve import ReserveInfo
 from ..Exceptions.BadBehaviorException import \
-    BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid, BorrowInvalidBook, BookPickInvlid, BadReject
+    BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid, BorrowInvalidBook, BookPickInvlid, BadReject, BadRenew
 from ..Exceptions.UnexpectedException import Unexpected
 from .User import User
 
@@ -59,6 +59,18 @@ class Library:
             return
         raise BadReject(request.command, "this appointment can be accepted")
 
+    def on_accept_renew(self, request: NormalRequest, now_date: date):
+        if not self.users[request.user_id].can_renew_date(request.book, now_date):
+            raise BadRenew(request.command, "cannot renew for the date")
+        if not self.can_renew_book(request):
+            raise BadRenew(request.command, "cannot renew for the books in library")
+        self.users[request.user_id].on_accept_renew(request.book)
+
+    def on_reject_renew(self, request: NormalRequest, now_date: date):
+        if self.users[request.user_id].can_renew_date(request.book, now_date) and self.can_renew_book(request):
+            raise BadRenew(request.command, "The book can be renewed.")
+        self.users[request.user_id].on_reject_renew(request.book)
+
     def on_accept_pick(self, request: NormalRequest, now_date: date):
         if request.user_id not in self.users:
             raise Unexpected("L.oap", f"user not exists ({request.user_id})")
@@ -83,6 +95,17 @@ class Library:
             except:
                 return
             raise BookPickInvlid(request.command, "the appoint shall be accepted")
+ 
+    def can_renew_book(self, request: NormalRequest):
+        book = request.book
+        if book.type == Book.Type.AU or book.type == Book.Type.BU or book.type == Book.Type.CU:
+            return False
+        if self.book_shelf[book] > 0:
+            return True
+        for user in self.users.values():
+            if user.has_ordered(book):
+                return False
+        return True
 
     def has_pickable_order(self, request: NormalRequest, now_date: date):
         user = self.users[request.user_id]

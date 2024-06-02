@@ -9,6 +9,8 @@ class CommandType(Enum):
     ORDER = 'ordered'
     RETURN = 'returned'
     PICK = 'picked'
+    RENEW = 'renewed'
+    DONATE = 'donated'
 
 
 class CommandInfo:
