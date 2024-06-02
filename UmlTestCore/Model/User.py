@@ -16,8 +16,8 @@ class User:
 
     def core_dump(self) -> str:
         sb = f"{self.user_id} Owned {len(self.owned_book)} books and {len(self.appoints)} appoints\n"
-        sb += "".join(f"  Book: {book}\n" for book in self.owned_book)
-        sb += "".join(f"  Appo: {order.book}\n" for order in self.appoints)
+        sb += "".join(f"  Book: {book.core_dump()}\n" for book in self.owned_book)
+        sb += "".join(f"  Appo: {order.book.core_dump()}\n" for order in self.appoints)
         return sb
 
     def on_accept_borrow(self, book: Book, command: CommandInfo, now_date: date):

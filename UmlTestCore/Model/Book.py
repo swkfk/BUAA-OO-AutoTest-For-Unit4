@@ -40,16 +40,19 @@ class Book:
         if self.return_date is not None:
             self.return_date += timedelta(days=30)
 
+    def core_dump(self) -> str:
+        base = f'{self.type.name}-{self.id}'
+        if self.return_date is not None:
+            base += f" (Return Due: {self.return_date})"
+        return base
+
     def __eq__(self, value: object) -> bool:
         if value is None or not isinstance(value, Book):
             return False
         return value.id == self.id and value.type == self.type
 
     def __str__(self) -> str:
-        base = f'{self.type.name}-{self.id}'
-        if self.return_date is not None:
-            base += f" (Return Due: {self.return_date})"
-        return base
+        return f'{self.type.name}-{self.id}'
 
     def __hash__(self) -> int:
         return hash(str(self))
