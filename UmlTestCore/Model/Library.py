@@ -9,7 +9,8 @@ from ..Manager.Command import CommandInfo
 from ..Manager.Request import MoveRequest, NormalRequest
 from ..Manager.Reserve import ReserveInfo
 from ..Exceptions.BadBehaviorException import \
-    BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid, BorrowInvalidBook, BookPickInvlid, BadReject, BadRenew
+    BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid,\
+    BorrowInvalidBook, BookPickInvlid, BadReject, BadRenew, DonatedBookInvalid
 from ..Exceptions.UnexpectedException import Unexpected
 from .User import User
 
@@ -19,6 +20,8 @@ class Library:
         self.book_shelf = BookStorage()
         self.borrow_return_office = BookStorage()
         self.appoint_office: List[Book] = []
+        self.drift_corner: List[Book] = []
+        self.drift_count: Dict[Book, int] = {}
         self.users: Dict[str, User] = {}
 
         self.book_shelf.books |= inventory
@@ -26,23 +29,37 @@ class Library:
             self.users[user.user_id] = user
 
     def on_reject_borrow(self, request: NormalRequest):
-        if request.book.type != Book.Type.A and request.book in self.book_shelf and self.book_shelf[request.book] > 0:
+        if not request.book.is_type_U() and request.book.type != Book.Type.A and request.book in self.book_shelf and self.book_shelf[request.book] > 0:
             self.book_shelf.get(request.book)
+            self.borrow_return_office.put(request.book)
+        elif request.book.is_type_U() and request.book.type != Book.Type.AU and request.book in self.drift_corner:
+            self.drift_corner.remove(request.book)
             self.borrow_return_office.put(request.book)
 
     def on_accept_borrow(self, request: NormalRequest, now_date: date):
-        if request.book not in self.book_shelf:
+        if request.book not in self.book_shelf and not request.book.is_type_U():
             raise BorrowInvalidBook(request.command, "This book is not on the shelf")
+        if request.book not in self.drift_corner and request.book.is_type_U():
+            raise BorrowInvalidBook(request.command, "This book is not in the drift corner")
         if request.user_id not in self.users:
             raise Unexpected("L.ob", f"user not exists ({request.user_id})")
-        self.book_shelf.get(request.book)
+        if request.book.is_type_U():
+            self.drift_corner.remove(request.book)
+        else:
+            self.book_shelf.get(request.book)
         self.users[request.user_id].on_accept_borrow(request.book, request.command, now_date)
 
     def on_return(self, request: NormalRequest, overdue: bool, now_date: date):
         if request.user_id not in self.users:
             raise Unexpected("L.or", f"user not exists ({request.user_id})")
         self.users[request.user_id].on_return_book(request.book, request.command, overdue, now_date)
+        if request.book in self.drift_count:
+            self.drift_count[request.book] += 1
         self.borrow_return_office.put(request.book)
+
+    def on_donate(self, request: NormalRequest):
+        self.drift_corner.append(request.book)
+        self.drift_count[request.book] = 0
 
     def on_accept_order(self, request: NormalRequest):
         if request.user_id not in self.users:
@@ -162,11 +179,19 @@ class Library:
                     raise Unexpected("L.ohm.3", "User has no this order")
                 # print(f"Removed: {book.reserve.user_id}, {book}")
                 user.appoints.remove(Order(book.reserve.user_id, book))
+            else:
+                raise BookMovementInvlid(move.command, f"cannot move from {move.movement[0].value} when tidying")
 
             if move.movement[1] == Position.BS:
                 if move.reserve_for != "":
                     raise BookMovementInvlid(move.command, "reserve for here is invalid (for bookshelf)")
-                self.book_shelf.put(move.book)
+                if move.book.is_type_U():
+                    if self.drift_count.get(move.book, 0) < 2:
+                        raise DonatedBookInvalid(move.command, f"this book is not qualified to goto bookshelf {self.drift_count.get(move.book, 0)} times borrowed")
+                    self.book_shelf.put(Book(move.book.type.to_no_U(), move.book.id))
+                    del self.drift_count[move.book]
+                else:
+                    self.book_shelf.put(move.book)
             elif move.movement[1] == Position.BRO:
                 if move.reserve_for != "":
                     raise BookMovementInvlid(move.command, "reserve for here is invalid (for borrow-return-office)")
@@ -183,11 +208,19 @@ class Library:
                 else:
                     move.book.reserve_for(ReserveInfo(move.reserve_for, now_date + timedelta(days=1)))
                 self.appoint_office.append(move.book)
+            elif move.movement[1] == Position.BDC:
+                if not move.movement[0] == Position.BRO:
+                    raise BookMovementInvlid(move.command, "books moved into the drift-corner shall be from the borrow-return-office")
+                if self.drift_count[move.book] >= 2:
+                    raise DonatedBookInvalid(move.command, "this book is qualified to goto the bookshelf")
+                self.drift_corner.append(move.book)
 
     def core_dump(self) -> str:
         sb = "Library: \n" + '-' * 20 + "\n\n"
         sb += self.book_shelf.core_dump("Bookshelf") + "\n"
         sb += self.borrow_return_office.core_dump("Borrow-Return-Office") + "\n"
+        sb += "Drift Corner: \n"
+        sb += "".join([f"  {book}: Borrowed for {self.drift_count[book]} times\n" for book in self.drift_corner])
         sb += "Appoint-Office: \n"
         sb += "".join([f"  {book}: {book.reserve}\n" for book in self.appoint_office])
         sb += "\nUsers: \n" + '-' * 20 + "\n"

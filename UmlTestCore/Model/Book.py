@@ -13,6 +13,15 @@ class Book:
         BU = 7
         CU = 14
 
+        def to_no_U(self):
+            if self == Book.Type.AU:
+                return Book.Type.A
+            if self == Book.Type.BU:
+                return Book.Type.B
+            if self == Book.Type.CU:
+                return Book.Type.C
+            return self
+
     def __init__(self, type: Type, id: str) -> None:
         self.type = type
         self.id = id
@@ -45,6 +54,9 @@ class Book:
         if self.return_date is not None:
             base += f" (Return Due: {self.return_date})"
         return base
+    
+    def is_type_U(self) -> bool:
+        return self.type in [Book.Type.AU, Book.Type.BU, Book.Type.CU, ]
 
     def __eq__(self, value: object) -> bool:
         if value is None or not isinstance(value, Book):
@@ -66,3 +78,9 @@ class Book:
             return cls(cls.Type.B, i)
         elif t == 'C':
             return cls(cls.Type.C, i)
+        elif t == 'AU':
+            return cls(cls.Type.AU, i)
+        elif t == 'BU':
+            return cls(cls.Type.BU, i)
+        elif t == 'CU':
+            return cls(cls.Type.CU, i)

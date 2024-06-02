@@ -7,13 +7,25 @@ from datetime import date, timedelta
 def generate_init_book():
     books = {}
     base_count = random.randint(2, 4)
-    ids = random.sample(range(1000, 10000), k=base_count * 6)
+    ids = random.sample(range(1000, 5000), k=base_count * 6)
     for i in range(0, base_count):
         books[Book(Book.Type.A, str(ids[i]))] = random.randint(1, 6)
     for i in range(base_count, base_count * 3):
         books[Book(Book.Type.B, str(ids[i]))] = random.randint(1, 6)
     for i in range(base_count * 3, base_count * 6):
         books[Book(Book.Type.C, str(ids[i]))] = random.randint(1, 6)
+    return books
+
+def generate_donate_book():
+    books = []
+    base_count = random.randint(1, 2)
+    ids = random.sample(range(1000, 5000), k=base_count * 6)
+    for i in range(0, base_count):
+        books.append(Book(Book.Type.AU, str(ids[i])))
+    for i in range(base_count, base_count * 3):
+        books.append(Book(Book.Type.BU, str(ids[i])))
+    for i in range(base_count * 3, base_count * 6):
+        books.append(Book(Book.Type.CU, str(ids[i])))
     return books
 
 def generate_init_user():

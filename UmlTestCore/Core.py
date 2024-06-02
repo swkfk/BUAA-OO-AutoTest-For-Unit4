@@ -9,7 +9,7 @@ from .Model.Book import Book
 from .Model.User import User
 from .Model.Order import Order
 from .Model import Position
-from .Generator.InitItems import generate_init_book, generate_init_user, generate_time_sequence
+from .Generator.InitItems import generate_init_book, generate_init_user, generate_time_sequence, generate_donate_book
 from .Generator.RandUtils import *
 from .Exceptions.BadBehaviorException import BadQuery
 
@@ -20,6 +20,8 @@ class Core:
 
         self.books: Dict[Book, int] = generate_init_book()
         self.users: List[User] = generate_init_user()
+
+        self.donates: List[Book] = generate_donate_book()
 
         self.dates: List[date] = generate_time_sequence()
         self.date_index = 0
@@ -104,7 +106,7 @@ class Core:
                 now_date = self.dates[self.date_index]
                 if return_date is None:
                     cmd_type = CommandType.RETURN
-                elif abs((return_date - now_date).days) <= 6:
+                elif abs((return_date - now_date).days) <= 6 and probability(0.4):
                     cmd_type = CommandType.RENEW
                 else:
                     cmd_type = CommandType.RETURN
@@ -117,15 +119,20 @@ class Core:
                     break
             order: Order = pick_list(user.appoints)
             return Reaction(Action.SendText, self.gen_command(CommandType.PICK, book_id=str(order.book), user_id=user.user_id))
-        elif probability(0.7):
+        elif probability(0.6):
             # Order
             user = pick_list(self.users)
             book = pick_list(list(self.books.keys()))
             return Reaction(Action.SendText, self.gen_command(CommandType.ORDER, book_id=book, user_id=user.user_id))
+        elif len(self.donates) > 0 and probability(0.5):
+            # Donate
+            user = pick_list(self.users)
+            book = self.donates.pop()
+            return Reaction(Action.SendText, self.gen_command(CommandType.DONATE, book_id=str(book), user_id=user.user_id))
         else:
             # Borrow
             user = pick_list(self.users)
-            book = pick_list(list(self.books.keys()))
+            book = pick_list(list(self.books.keys()) + self.library.drift_corner)
             return Reaction(Action.SendText, self.gen_command(CommandType.BORROW, book_id=book, user_id=user.user_id))
 
     def gen_open(self) -> Reaction:
@@ -181,6 +188,8 @@ class Core:
                     self.library.on_accept_renew(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
                 else:
                     self.library.on_reject_renew(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
+            elif outputs[3] == CommandType.DONATE.value:
+                self.library.on_donate(NormalRequest(book, user_id, command_info))
             else:
                 assert False
         else:

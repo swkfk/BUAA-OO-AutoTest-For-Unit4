@@ -4,6 +4,7 @@ class Position(Enum):
     BRO = "bro"
     AO = "ao"
     BS = "bs"
+    BDC = "bdc"
 
     @classmethod
     def from_str(cls, s: str):
@@ -13,3 +14,5 @@ class Position(Enum):
             return cls.AO
         if s == 'bs':
             return cls.BS
+        if s == 'bdc':
+            return cls.BDC
