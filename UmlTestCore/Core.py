@@ -133,8 +133,8 @@ class Core:
 
     def parse_output(self, s: str, command: str):
         command_info = CommandInfo(command, s)
-        outputs = s.split()
-        assert len(outputs) == 5 or len(outputs) == 3
+        outputs = s.replace("not overdue", "NOD").replace("overdue", "OD").split()
+        assert len(outputs) in [3, 5, 6]
         if len(outputs) == 3:
             # Query
             book = Book.from_str(outputs[1])
@@ -143,7 +143,7 @@ class Core:
             value = int(outputs[2])
             if value != self.library.book_shelf[book]:
                 raise BadQuery(command_info, f"Expected: {self.library.book_shelf[book]}, Got: {value}")
-        else:
+        elif len(outputs) == 5:
             assert outputs[1] == '[accept]' or outputs[1] == '[reject]'
             accept = outputs[1] == '[accept]'
             user_id = outputs[2]
@@ -152,7 +152,7 @@ class Core:
             assert book is not None
             if outputs[3] == CommandType.BORROW.value:
                 if accept:
-                    self.library.on_accept_borrow(NormalRequest(book, user_id, command_info))
+                    self.library.on_accept_borrow(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
                 else:
                     self.library.on_reject_borrow(NormalRequest(book, user_id, command_info))
             elif outputs[3] == CommandType.ORDER.value:
@@ -160,9 +160,6 @@ class Core:
                     self.library.on_accept_order(NormalRequest(book, user_id, command_info))
                 else:
                     self.library.on_reject_order(NormalRequest(book, user_id, command_info))
-            elif outputs[3] == CommandType.RETURN.value:
-                assert accept
-                self.library.on_return(NormalRequest(book, user_id, command_info))
             elif outputs[3] == CommandType.PICK.value:
                 if accept:
                     self.library.on_accept_pick(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
@@ -170,6 +167,16 @@ class Core:
                     self.library.on_reject_pick(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
             else:
                 assert False
+        else:
+            # Return
+            assert outputs[1] == '[accept]'
+            user_id = outputs[2]
+            assert any((user.user_id == user_id for user in self.users))
+            book = Book.from_str(outputs[4])
+            assert book is not None
+            assert outputs[5] in ["NOD", "OD"]
+            overdue = outputs[5] == 'OD'
+            self.library.on_return(NormalRequest(book, user_id, command_info), overdue, self.dates[self.date_index])
 
     def gen_command(self, cmd_type: CommandType, **kwargs):
         t = self.dates[self.date_index]

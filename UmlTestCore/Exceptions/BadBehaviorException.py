@@ -53,3 +53,8 @@ class BadReject(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
         super().__init__(command, reason)
         self.prompt = "You shall not reject this"
+
+class BadReturnOverdue(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Return overdue judgement is wrong"

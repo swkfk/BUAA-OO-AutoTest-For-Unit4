@@ -30,18 +30,18 @@ class Library:
             self.book_shelf.get(request.book)
             self.borrow_return_office.put(request.book)
 
-    def on_accept_borrow(self, request: NormalRequest):
+    def on_accept_borrow(self, request: NormalRequest, now_date: date):
         if request.book not in self.book_shelf:
             raise BorrowInvalidBook(request.command, "This book is not on the shelf")
         if request.user_id not in self.users:
             raise Unexpected("L.ob", f"user not exists ({request.user_id})")
         self.book_shelf.get(request.book)
-        self.users[request.user_id].on_accept_borrow(request.book, request.command)
+        self.users[request.user_id].on_accept_borrow(request.book, request.command, now_date)
 
-    def on_return(self, request: NormalRequest):
+    def on_return(self, request: NormalRequest, overdue: bool, now_date: date):
         if request.user_id not in self.users:
             raise Unexpected("L.or", f"user not exists ({request.user_id})")
-        self.users[request.user_id].on_return_book(request.book, request.command)
+        self.users[request.user_id].on_return_book(request.book, request.command, overdue, now_date)
         self.borrow_return_office.put(request.book)
 
     def on_accept_order(self, request: NormalRequest):
@@ -71,7 +71,7 @@ class Library:
                 break
         self.appoint_office.pop(i)
 
-        self.users[request.user_id].on_accept_pick(request.book, request.command)
+        self.users[request.user_id].on_accept_pick(request.book, request.command, now_date)
 
     def on_reject_pick(self, request: NormalRequest, now_date: date):
         if request.user_id not in self.users:
