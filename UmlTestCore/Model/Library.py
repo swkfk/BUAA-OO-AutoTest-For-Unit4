@@ -10,7 +10,8 @@ from ..Manager.Request import MoveRequest, NormalRequest
 from ..Manager.Reserve import ReserveInfo
 from ..Exceptions.BadBehaviorException import \
     BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid,\
-    BorrowInvalidBook, BookPickInvlid, BadReject, BadRenew, DonatedBookInvalid
+    BorrowInvalidBook, BookPickInvlid, BadReject, BadRenew, DonatedBookInvalid,\
+    BookRemainedInDrift
 from ..Exceptions.UnexpectedException import Unexpected
 from .User import User
 
@@ -138,6 +139,9 @@ class Library:
 
         for _ in self.borrow_return_office:
             raise BookRemainedOnBro(cmd_check)
+        for book in self.drift_corner:
+            if self.drift_count.get(book, 0) >= 2:
+                raise BookRemainedInDrift(cmd_check, f"book {book} has beed borrowed for {self.drift_count.get(book, 0)} times")
         for book in self.appoint_office:
             if book.reserve is None:
                 raise Unexpected("L.ood", "Book not reserved for anyone in appoint office")
@@ -151,6 +155,9 @@ class Library:
         for move in moves:
             if move.movement[0] == move.movement[1]:
                 raise BookMovementInvlid(move.command, "share the same start and end")
+
+            if move.movement[0] is None or move.movement[1] is None:
+                raise BookMovementInvlid(move.command, "unknown position")
 
             if move.movement[0] == Position.BS:
                 self.try_get_book(self.book_shelf, move.book, move.command, "bookshelf")

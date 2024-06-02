@@ -32,6 +32,10 @@ class BookRemainedOnBro(BadBehavior):
         super().__init__(command, reason)
         self.prompt = "Book in the bro not cleared"
 
+class BookRemainedInDrift(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Book in the bdc not cleared"
 
 class BookMovementInvlid(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
