@@ -140,7 +140,7 @@ class Core:
         if self.date_index >= len(self.dates):
             return Reaction(Action.Terminate)
         # Do every close check for credit change
-        d = self.dates[self.date_index - 1]
+        d = self.dates[self.date_index - 1] + timedelta(days=1)
         while d < self.dates[self.date_index]:
             self.library.handle_overdue_close(d)
             d += timedelta(days=1)
