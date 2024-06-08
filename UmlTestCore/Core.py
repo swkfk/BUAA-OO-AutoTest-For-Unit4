@@ -1,5 +1,5 @@
 from typing import Dict, List
-from datetime import date
+from datetime import date, timedelta
 
 from .Runner.Communicator import Reaction, Action
 from .Manager.Request import MoveRequest, NormalRequest
@@ -139,6 +139,11 @@ class Core:
         self.date_index += 1
         if self.date_index >= len(self.dates):
             return Reaction(Action.Terminate)
+        # Do every close check for credit change
+        d = self.dates[self.date_index - 1]
+        while d < self.dates[self.date_index]:
+            self.library.handle_overdue_close(d)
+            d += timedelta(days=1)
         self.before_open()
         return Reaction(Action.SendText, self.gen_command(CommandType.OPEN))
 

@@ -13,5 +13,8 @@ class ReserveInfo:
     def overdue_close(self, now_date: date):
         return now_date - self.arrive_date >= timedelta(days=4)
 
+    def overdue_precise(self, now_date: date):
+        return now_date == self.arrive_date + timedelta(days=4)
+
     def __str__(self) -> str:
         return f"For {self.user_id} Arrive At {self.arrive_date}"

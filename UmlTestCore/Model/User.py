@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from datetime import date, timedelta
 
 from .Book import Book
@@ -41,6 +41,8 @@ class User:
             raise BadReturnOverdue(command, f"Overdue at {return_date}, now is {now_date}. Overdue!")
         if (real_overdue, overdue) == (False, True):
             raise BadReturnOverdue(command, f"Overdue at {return_date}, now is {now_date}. Not Overdue!")
+        if not overdue:
+            self.change_credit(+1)
         b.return_date = None
         self.owned_book.remove(book)
         try:
@@ -64,6 +66,14 @@ class User:
     def has_ordered(self, book: Book):
         return Order(self.user_id, book) in self.appoints
 
+    def handle_overdue_close(self, now_date: date):
+        for book in self.owned_book:
+            return_date = book.return_date
+            if return_date is None:
+                raise Unexpected("M.U.ho", "Book does not have a recorded return date " + str(now_date))
+            if return_date == now_date:
+                self.change_credit(-2)
+
     def check_borrow(self, book: Book, command: CommandInfo, addi: str = ""):
         if book.type == Book.Type.A:
             raise BorrowInvalidBook(command, "borrow A type book" + addi)
@@ -82,3 +92,6 @@ class User:
     def check_credit(self, command: CommandInfo, credit: int):
         if credit != self.credit:
             raise CreditDiffers(command, f"you returned {credit}, {self.credit} actually")
+
+    def change_credit(self, diff: int):
+        self.credit = min(20, self.credit + diff)

@@ -22,6 +22,7 @@ class Library:
         self.borrow_return_office = BookStorage()
         self.appoint_office: List[Book] = []
         self.drift_corner: List[Book] = []
+        self.donors: Dict[Book, str] = {}
         self.drift_count: Dict[Book, int] = {}
         self.users: Dict[str, User] = {}
 
@@ -61,6 +62,10 @@ class Library:
     def on_donate(self, request: NormalRequest):
         self.drift_corner.append(request.book)
         self.drift_count[request.book] = 0
+        if request.user_id not in self.users:
+            raise Unexpected("L.od", f"user not exists ({request.user_id})")
+        self.users[request.user_id].change_credit(+2)
+        self.donors[request.book] = request.user_id
 
     def on_accept_order(self, request: NormalRequest):
         if request.user_id not in self.users:
@@ -149,7 +154,22 @@ class Library:
                 raise OverdueBookRemained(cmd_check)
 
     def on_close(self, now_date: date, moves: List[MoveRequest]):
+        self.handle_overdue_close(now_date)
         self.on_handle_move(now_date, moves, "close")
+
+    def handle_overdue_close(self, now_date: date):
+        # Borrowed Overdue
+        for uid, user in self.users.items():
+            user.handle_overdue_close(now_date)
+        for book in self.appoint_office:
+            if book.reserve is None:
+                raise Unexpected("L.hoc", "Book not reserved for anyone in appoint office")
+            if book.reserve.overdue_precise(now_date):
+                user_id = book.reserve.user_id
+                user = self.users.get(user_id, None)
+                if user is None:
+                    raise Unexpected("L.hoc.2", "User not exists")
+                user.change_credit(-3)
 
     def on_handle_move(self, now_date: date, moves: List[MoveRequest], time: Literal["open", "close"]):
         for move in moves:
@@ -196,7 +216,9 @@ class Library:
                     if self.drift_count.get(move.book, 0) < 2:
                         raise DonatedBookInvalid(move.command, f"this book is not qualified to goto bookshelf {self.drift_count.get(move.book, 0)} times borrowed")
                     self.book_shelf.put(Book(move.book.type.to_no_U(), move.book.id))
+                    self.users[self.donors[move.book]].change_credit(+2)
                     del self.drift_count[move.book]
+                    del self.donors[move.book]
                 else:
                     self.book_shelf.put(move.book)
             elif move.movement[1] == Position.BRO:
