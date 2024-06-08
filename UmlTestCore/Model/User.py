@@ -16,7 +16,7 @@ class User:
         self.appoints: List[Order] = []
 
     def core_dump(self) -> str:
-        sb = f"{self.user_id} Owned {len(self.owned_book)} books and {len(self.appoints)} appoints\n"
+        sb = f"{self.user_id}(Credit: {self.credit}) owned {len(self.owned_book)} books and {len(self.appoints)} appoints\n"
         sb += "".join(f"  Book: {book.core_dump()}\n" for book in self.owned_book)
         sb += "".join(f"  Appo: {order.book.core_dump()}\n" for order in self.appoints)
         return sb
