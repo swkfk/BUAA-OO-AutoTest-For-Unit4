@@ -11,7 +11,7 @@ from ..Manager.Reserve import ReserveInfo
 from ..Exceptions.BadBehaviorException import \
     BookRemainedOnBro, OverdueBookRemained, BookMovementInvlid,\
     BorrowInvalidBook, BookPickInvlid, BadReject, BadRenew, DonatedBookInvalid,\
-    BookRemainedInDrift
+    BookRemainedInDrift, OrderInvalidBook
 from ..Exceptions.UnexpectedException import Unexpected
 from .User import User
 
@@ -70,15 +70,15 @@ class Library:
     def on_accept_order(self, request: NormalRequest):
         if request.user_id not in self.users:
             raise Unexpected("L.oao", f"user not exists ({request.user_id})")
-        self.users[request.user_id].check_borrow(request.book, request.command, " (Appointment)")
+        self.users[request.user_id].check_order(request.book, request.command)
         self.users[request.user_id].appoints.append(Order(request.user_id, request.book))
 
     def on_reject_order(self, request: NormalRequest):
         if request.user_id not in self.users:
             raise Unexpected("L.oro", f"user not exists ({request.user_id})")
         try:
-            self.users[request.user_id].check_borrow(request.book, request.command, " (Appointment)")
-        except BorrowInvalidBook:
+            self.users[request.user_id].check_order(request.book, request.command)
+        except OrderInvalidBook:
             return
         raise BadReject(request.command, "this appointment can be accepted")
 

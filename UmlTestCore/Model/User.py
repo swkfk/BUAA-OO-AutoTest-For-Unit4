@@ -1,9 +1,9 @@
-from typing import List, Dict
+from typing import List
 from datetime import date, timedelta
 
 from .Book import Book
 from .Order import Order
-from ..Exceptions.BadBehaviorException import BorrowInvalidBook, BadReturnOverdue, CreditDiffers
+from ..Exceptions.BadBehaviorException import BorrowInvalidBook, BadReturnOverdue, CreditDiffers, OrderInvalidBook
 from ..Exceptions.UnexpectedException import Unexpected
 from ..Manager.Command import CommandInfo
 
@@ -81,6 +81,20 @@ class User:
             raise BorrowInvalidBook(command, "borrow two B type books at a time" + addi)
         if any((b == book for b in self.owned_book)):
             raise BorrowInvalidBook(command, "borrow same books at a time" + addi)
+
+    def check_order(self, book: Book, command: CommandInfo):
+        if self.credit < 0:
+            raise OrderInvalidBook(command, "order a book with credit negative")
+        if book.type == Book.Type.A or book.is_type_U():
+            raise OrderInvalidBook(command, "order invalid type book")
+        if book.type == Book.Type.B and any((b.book.type == Book.Type.B for b in self.appoints)):
+            raise OrderInvalidBook(command, "order two B type books at a time")
+        if book.type == Book.Type.B and any((b.type == Book.Type.B for b in self.owned_book)):
+            raise OrderInvalidBook(command, "order a B type book when having borrowed a B type book")
+        if book.type == Book.Type.C and any((b.book == book for b in self.appoints)):
+            raise OrderInvalidBook(command, "order same books at a time")
+        if book.type == Book.Type.C and any((b == book for b in self.owned_book)):
+            raise OrderInvalidBook(command, "order the same book when having borrowed it")
 
     def can_renew_date(self, book: Book, now_date: date) -> bool:
         b = self.owned_book[self.owned_book.index(book)]

@@ -20,6 +20,10 @@ class BorrowInvalidBook(BadBehavior):
         super().__init__(command, reason)
         self.prompt = "Cannot borrow this book"
 
+class OrderInvalidBook(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Cannot order this book"
 
 class OverdueBookRemained(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
