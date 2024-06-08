@@ -3,13 +3,14 @@ from datetime import date, timedelta
 
 from .Book import Book
 from .Order import Order
-from ..Exceptions.BadBehaviorException import BorrowInvalidBook, BadReturnOverdue
+from ..Exceptions.BadBehaviorException import BorrowInvalidBook, BadReturnOverdue, CreditDiffers
 from ..Exceptions.UnexpectedException import Unexpected
 from ..Manager.Command import CommandInfo
 
 class User:
     def __init__(self, user_id: str) -> None:
         self.user_id: str = user_id
+        self.credit: int = 10
         self.owned_book: List[Book] = []
         self.renewed_book: List[Book] = []
         self.appoints: List[Order] = []
@@ -75,3 +76,7 @@ class User:
         if return_date is None:
             raise Unexpected("M.U.crd", "Book does not have a recorded return date " + str(now_date))
         return return_date - timedelta(days=5) < now_date <= return_date
+
+    def check_credit(self, command: CommandInfo, credit: int):
+        if credit != self.credit:
+            raise CreditDiffers(command, f"you returned {credit}, {self.credit} actually")

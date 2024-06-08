@@ -72,3 +72,8 @@ class DonatedBookInvalid(BadBehavior):
     def __init__(self, command: CommandInfo, reason: str = "") -> None:
         super().__init__(command, reason)
         self.prompt = "Drift Book Error"
+
+class CreditDiffers(BadBehavior):
+    def __init__(self, command: CommandInfo, reason: str = "") -> None:
+        super().__init__(command, reason)
+        self.prompt = "Credit Differed"

@@ -155,12 +155,24 @@ class Core:
         assert len(outputs) in [3, 5, 6]
         if len(outputs) == 3:
             # Query
-            book = Book.from_str(outputs[1])
-            assert book is not None
-            assert outputs[2].isnumeric()
-            value = int(outputs[2])
-            if value != self.library.book_shelf[book]:
-                raise BadQuery(command_info, f"Expected: {self.library.book_shelf[book]}, Got: {value}")
+            if '-' in outputs[1]:
+                # Query Book
+                book = Book.from_str(outputs[1])
+                assert book is not None
+                assert outputs[2].isnumeric()
+                value = int(outputs[2])
+                if value != self.library.book_shelf[book]:
+                    raise BadQuery(command_info, f"Expected: {self.library.book_shelf[book]}, Got: {value}")
+            else:
+                # Query Credit
+                user_id = outputs[1]
+                assert any((user.user_id == user_id for user in self.users))
+                assert outputs[2].isnumeric()
+                credit = int(outputs[2])
+                for u in self.users:
+                    if u.user_id == user_id:
+                        break
+                u.check_credit(command_info, credit)
         elif len(outputs) == 5:
             assert outputs[1] == '[accept]' or outputs[1] == '[reject]'
             accept = outputs[1] == '[accept]'
