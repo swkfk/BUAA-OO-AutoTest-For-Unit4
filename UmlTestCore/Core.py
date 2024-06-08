@@ -92,7 +92,16 @@ class Core:
     def gen_next_command(self) -> Reaction:
         lent_book_cout = sum(map(lambda x: len(x.owned_book), (u for u in self.users)))
         order_book_cout = sum(map(lambda x: len(x.appoints), (u for u in self.users)))
-        if lent_book_cout > len(self.users) * 1.5 or (lent_book_cout > 0 and probability(0.3)):
+        if probability(0.2):
+            # Query Book or Credit
+            if probability(0.7):
+                user = pick_list(self.users)
+                return Reaction(Action.SendText, self.gen_command(CommandType.QUERY_CREDIT, user_id=user.user_id))
+            else:
+                user = pick_list(self.users)
+                book = pick_list(list(self.books.keys()))
+                return Reaction(Action.SendText, self.gen_command(CommandType.QUERY, user_id=user.user_id, book_id=str(book)))
+        elif lent_book_cout > len(self.users) * 1.5 or (lent_book_cout > 0 and probability(0.3)):
             # Return Or Renew
             while True:
                 user = pick_list([u for u in self.users if len(u.owned_book) > 0])
@@ -172,8 +181,10 @@ class Core:
                 # Query Credit
                 user_id = outputs[1]
                 assert any((user.user_id == user_id for user in self.users))
-                assert outputs[2].isnumeric()
-                credit = int(outputs[2])
+                try:
+                    credit = int(outputs[2])
+                except ValueError:
+                    assert False
                 for u in self.users:
                     if u.user_id == user_id:
                         break
@@ -224,6 +235,9 @@ class Core:
         t = self.dates[self.date_index]
         if cmd_type == CommandType.OPEN or cmd_type == CommandType.CLOSE:
             command = f"[{t}] {cmd_type.value}"
+        elif cmd_type == CommandType.QUERY_CREDIT:
+            user_id = kwargs['user_id']
+            command = f"[{t}] {user_id} {cmd_type.value}"
         else:
             book_id = kwargs['book_id']
             user_id = kwargs['user_id']

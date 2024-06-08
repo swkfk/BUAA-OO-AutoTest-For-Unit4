@@ -5,6 +5,7 @@ class CommandType(Enum):
     OPEN = 'OPEN'
     CLOSE = 'CLOSE'
     QUERY = 'queried'
+    QUERY_CREDIT = 'queried credit score'
     BORROW = 'borrowed'
     ORDER = 'ordered'
     RETURN = 'returned'
