@@ -1,3 +1,4 @@
+import itertools
 from UmlTestCore.Configure.ConfigInteraction import read_config, interactor, fisrt_time
 from UmlTestCore.Runner.Communicator import runner_core
 from UmlTestCore.Core import Core
@@ -6,6 +7,31 @@ import sys
 import shutil
 import time
 from pathlib import Path
+
+try:
+    from tqdm import tqdm  # type: ignore
+except ImportError:
+    print("Install `tqdm` with *pip*, and the information printed will be more beautiful!")
+    class tqdm:
+        def __init__(self, iterable) -> None:
+            try:
+                self.total = len(iterable)
+            except:
+                self.total = None
+            self.desc = ""
+            self.post = ""
+            self.cur = 0
+
+        def set_description_str(self, s):
+            self.desc = s
+
+        def set_postfix_str(self, s):
+            self.post = s
+
+        def update(self, c):
+            self.cur += c
+            print(f"{self.desc}: {self.cur} / {self.total if self.total is not None else 'endless'} ({self.post})")
+
 
 def main():
     Path("TestCases/").mkdir(exist_ok=True)
@@ -36,14 +62,17 @@ def main():
     if test_num == 0:
         print("Launch end-less tests")
 
-    i = 1
     wa = 0
-    while i <= test_num or test_num == 0:
-        print(f"#({i}/{str(test_num) if test_num > 0 else 'endless'}) WA: {wa} cases\n...", end='')
+    if test_num == 0:
+        iterator = itertools.count(1)
+    else:
+        iterator = range(1, test_num + 1)
+    _tqdm = tqdm(iterator)
+    for i in iterator:
+        _tqdm.set_description_str(f"(WA: {wa} cases ...)")
         sys.stdin.flush()
         core = Core(config)
         ret = runner_core([java_path, '-jar', jar_path], core.command_callback, core.gen_init_command(), 'TestCases/%%.txt')
-        print(ret)
         if ret != "Ok":
             dump_core = core.library.core_dump()
             time_s = time.strftime('%m-%d-%H-%M-%S', time.localtime())
@@ -53,7 +82,10 @@ def main():
             Path(f'TestCases/{time_s}.dump.txt').write_text(dump_core)
             Path(f'TestCases/{time_s}.check.txt').write_text(ret)
             time.sleep(1)
+            print(ret)
         i += 1
+        _tqdm.set_postfix_str(ret)
+        _tqdm.update(1)
 
     if wa == 0:
         print("All Accepted!")
