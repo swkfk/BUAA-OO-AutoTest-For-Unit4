@@ -21,7 +21,9 @@ class User:
         sb += "".join(f"  Appo: {order.book.core_dump()}\n" for order in self.appoints)
         return sb
 
-    def on_accept_borrow(self, book: Book, command: CommandInfo, now_date: date):
+    def on_accept_borrow(self, book: Book, command: CommandInfo, now_date: date, check_credit: bool = True):
+        if check_credit and self.credit < 0:
+            raise BorrowInvalidBook(command, "credit is negative: " + str(self.credit))
         self.check_borrow(book, command)
         b = Book(book.type, book.id)
         b.mark_borrow(now_date)
@@ -47,7 +49,7 @@ class User:
             pass
 
     def on_accept_pick(self, book: Book, command: CommandInfo, now_date: date):
-        self.on_accept_borrow(book, command, now_date)
+        self.on_accept_borrow(book, command, now_date, check_credit=False)
         if not self.has_ordered(book):
             raise Unexpected("M.U.oap", "Pick a book that is not wanted " + str(command))
         self.appoints.remove(Order(self.user_id, book))
