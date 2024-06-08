@@ -85,12 +85,12 @@ class Library:
     def on_accept_renew(self, request: NormalRequest, now_date: date):
         if not self.users[request.user_id].can_renew_date(request.book, now_date):
             raise BadRenew(request.command, "cannot renew for the date")
-        if not self.can_renew_book(request):
+        if not self.can_renew_book(request, request.user_id):
             raise BadRenew(request.command, "cannot renew for the books in library")
         self.users[request.user_id].on_accept_renew(request.book)
 
     def on_reject_renew(self, request: NormalRequest, now_date: date):
-        if self.users[request.user_id].can_renew_date(request.book, now_date) and self.can_renew_book(request):
+        if self.users[request.user_id].can_renew_date(request.book, now_date) and self.can_renew_book(request, request.user_id):
             raise BadRenew(request.command, "The book can be renewed.")
         self.users[request.user_id].on_reject_renew(request.book)
 
@@ -119,7 +119,9 @@ class Library:
                 return
             raise BookPickInvlid(request.command, "the appoint shall be accepted")
  
-    def can_renew_book(self, request: NormalRequest):
+    def can_renew_book(self, request: NormalRequest, user_id: str):
+        if self.users[user_id].credit < 0:
+            return False
         book = request.book
         if book.type == Book.Type.AU or book.type == Book.Type.BU or book.type == Book.Type.CU:
             return False
