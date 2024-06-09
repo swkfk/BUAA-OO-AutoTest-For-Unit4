@@ -200,7 +200,7 @@ class Core:
                 if accept:
                     self.library.on_accept_borrow(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
                 else:
-                    self.library.on_reject_borrow(NormalRequest(book, user_id, command_info))
+                    self.library.on_reject_borrow(NormalRequest(book, user_id, command_info), self.dates[self.date_index])
             elif outputs[3] == CommandType.ORDER.value:
                 if accept:
                     self.library.on_accept_order(NormalRequest(book, user_id, command_info))

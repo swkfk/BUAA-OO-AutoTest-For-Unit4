@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from .Book import Book
 from .Order import Order
-from ..Exceptions.BadBehaviorException import BorrowInvalidBook, BadReturnOverdue, CreditDiffers, OrderInvalidBook
+from ..Exceptions.BadBehaviorException import BorrowInvalidBook, BadReturnOverdue, CreditDiffers, OrderInvalidBook, RejectBorrowInvalidBook
 from ..Exceptions.UnexpectedException import Unexpected
 from ..Manager.Command import CommandInfo
 
@@ -28,6 +28,15 @@ class User:
         b = Book(book.type, book.id)
         b.mark_borrow(now_date)
         self.owned_book.append(b)
+
+    def on_reject_borrow(self, book: Book, command: CommandInfo, now_date: date, check_credit: bool = True):
+        try:
+            if check_credit and self.credit < 0:
+                raise BorrowInvalidBook(command)
+            self.check_borrow(book, command)
+        except BorrowInvalidBook:
+            return
+        raise RejectBorrowInvalidBook(command, "this book can be borrowed")
 
     def on_return_book(self, book: Book, command: CommandInfo, overdue: bool, now_date: date):
         if book not in self.owned_book:
@@ -75,10 +84,10 @@ class User:
                 self.change_credit(-2)
 
     def check_borrow(self, book: Book, command: CommandInfo, addi: str = ""):
-        if book.type == Book.Type.A:
-            raise BorrowInvalidBook(command, "borrow A type book" + addi)
-        if book.type == Book.Type.B and any((b.type == Book.Type.B for b in self.owned_book)):
-            raise BorrowInvalidBook(command, "borrow two B type books at a time" + addi)
+        if book.type == Book.Type.A or book.type == Book.Type.AU:
+            raise BorrowInvalidBook(command, "borrow A? type book" + addi)
+        if (book.type == Book.Type.B or book.type == Book.Type.BU) and any((b.type == book.type for b in self.owned_book)):
+            raise BorrowInvalidBook(command, "borrow two B? type books at a time" + addi)
         if any((b == book for b in self.owned_book)):
             raise BorrowInvalidBook(command, "borrow same books at a time" + addi)
 

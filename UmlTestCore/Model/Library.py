@@ -30,13 +30,19 @@ class Library:
         for user in users:
             self.users[user.user_id] = user
 
-    def on_reject_borrow(self, request: NormalRequest):
+    def on_reject_borrow(self, request: NormalRequest, now_date: date):
         if not request.book.is_type_U() and request.book.type != Book.Type.A and request.book in self.book_shelf and self.book_shelf[request.book] > 0:
             self.book_shelf.get(request.book)
             self.borrow_return_office.put(request.book)
         elif request.book.is_type_U() and request.book.type != Book.Type.AU and request.book in self.drift_corner:
             self.drift_corner.remove(request.book)
             self.borrow_return_office.put(request.book)
+        if request.book.is_type_U():
+            if request.book in self.drift_corner:
+                self.users[request.user_id].on_reject_borrow(request.book, request.command, now_date)
+        else:
+            if request.book in self.book_shelf and self.book_shelf[request.book] > 0:
+                self.users[request.user_id].on_reject_borrow(request.book, request.command, now_date)
 
     def on_accept_borrow(self, request: NormalRequest, now_date: date):
         if request.book not in self.book_shelf and not request.book.is_type_U():
