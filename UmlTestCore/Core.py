@@ -92,7 +92,7 @@ class Core:
     def gen_next_command(self) -> Reaction:
         lent_book_cout = sum(map(lambda x: len(x.owned_book), (u for u in self.users)))
         order_book_cout = sum(map(lambda x: len(x.appoints), (u for u in self.users)))
-        if probability(0.2):
+        if probability(0.25):
             # Query Book or Credit
             if probability(0.7):
                 user = pick_list(self.users)
@@ -101,7 +101,7 @@ class Core:
                 user = pick_list(self.users)
                 book = pick_list(list(self.books.keys()))
                 return Reaction(Action.SendText, self.gen_command(CommandType.QUERY, user_id=user.user_id, book_id=str(book)))
-        elif lent_book_cout > len(self.users) * 1.5 or (lent_book_cout > 0 and probability(0.3)):
+        elif lent_book_cout > len(self.users) * 2.5 or (lent_book_cout > 0 and probability(0.1)):
             # Return Or Renew
             while True:
                 user = pick_list([u for u in self.users if len(u.owned_book) > 0])
@@ -115,7 +115,7 @@ class Core:
                 now_date = self.dates[self.date_index]
                 if return_date is None:
                     cmd_type = CommandType.RETURN
-                elif abs((return_date - now_date).days) <= 6 and probability(0.4):
+                elif abs((return_date - now_date).days) <= 6 and probability(0.7):
                     cmd_type = CommandType.RENEW
                 else:
                     cmd_type = CommandType.RETURN
