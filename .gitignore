@@ -2,4 +2,5 @@
 !.gitignore
 !UmlMain.py
 !/UmlTestCore/
+!README.md
 **/__pycache__/
