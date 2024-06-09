@@ -18,7 +18,7 @@ def generate_init_book():
 
 def generate_donate_book():
     books = []
-    base_count = random.randint(1, 2)
+    base_count = random.randint(4, 8)
     ids = random.sample(range(1000, 5000), k=base_count * 6)
     for i in range(0, base_count):
         books.append(Book(Book.Type.AU, str(ids[i])))
